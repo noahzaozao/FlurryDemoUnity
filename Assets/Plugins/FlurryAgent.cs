@@ -3,6 +3,15 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+enum FlurryEventRecordStatus{
+	FlurryEventFailed,
+	FlurryEventRecorded,
+	FlurryEventUniqueCountExceeded,
+	FlurryEventParamsCountExceeded,
+	FlurryEventLogCountExceeded,
+	FlurryEventLoggingDelayed
+}
+
 public class FlurryAgent : IDisposable
 {
 	private static FlurryAgent _instance;
@@ -61,12 +70,17 @@ public class FlurryAgent : IDisposable
 	
 	public void onStartSession(string apiKey)
 	{
-		
 		Debug.Log ("****** onStartSession " +apiKey);
 		using(AndroidJavaClass cls_UnityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer")) 
 		{
 			using(AndroidJavaObject obj_Activity = cls_UnityPlayer.GetStatic<AndroidJavaObject>("currentActivity")) 
 			{
+				cls_FlurryAgent.CallStatic("init", obj_Activity, apiKey);
+//				cls_FlurryAgent.CallStatic("setLogLevel", 2);
+//				cls_FlurryAgent.CallStatic("setLogEnabled", true);
+//				cls_FlurryAgent.CallStatic("setLogEvents", true);
+//				cls_FlurryAgent.CallStatic("setCaptureUncaughtExceptions", true);
+//
 				cls_FlurryAgent.CallStatic("onStartSession", obj_Activity, apiKey);
 			}
 		}
@@ -87,7 +101,7 @@ public class FlurryAgent : IDisposable
 	public void logEvent(string eventId)
 	{
 		Debug.Log ("****** log Event "+eventId);
-		cls_FlurryAgent.CallStatic("logEvent", eventId);
+		AndroidJavaObject javaRecordStatus = cls_FlurryAgent.CallStatic<AndroidJavaObject>("logEvent", eventId);
 	}
 	
 	public void setContinueSessionMillis(long milliseconds)
